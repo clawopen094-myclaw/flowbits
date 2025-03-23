@@ -1,0 +1,100 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Workflow {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  defination  String
+  executionPlan String?
+  creditsCost Int @default(0)
+  status      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  lastRunAt   DateTime?
+  lastRunId   String?
+  lastRunStatus String? 
+
+  executions WorkflowExecution[]
+
+  @@unique([name, userId])
+}
+
+
+model SystemVariables {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String   
+  value       String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([name,value,userId])
+}
+
+
+
+model WorkflowExecution {
+  id          String   @id @default(cuid())
+  workflowId  String
+  userId      String
+  trigger     String
+  definition  String?
+  status      String
+  createdAt   DateTime @default(now())
+  startedAt   DateTime?
+  completedAt   DateTime?
+
+  creditsConsumed Int @default(0)
+
+  phases executionPhase[]
+
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+}
+
+
+model executionPhase {
+  id          String   @id @default(cuid())
+  userId      String
+  status      String
+  number      Int
+  node        String
+  name        String
+  startedAt   DateTime?
+  completedAt DateTime?
+  inputs      String?
+  outputs     String?
+
+  creditsCost Int?
+  workflowexecutionId String
+  logs  ExecutionLogs[]
+
+  execution WorkflowExecution @relation(fields: [workflowexecutionId], references: [id], onDelete: Cascade)
+}
+
+model ExecutionLogs {
+  id          String   @id @default(cuid())
+  logLevel    String
+  message     String
+  timestamp   DateTime @default(now())
+
+  executionPhaseId String
+  
+  executionPhase executionPhase @relation(fields: [executionPhaseId], references: [id], onDelete: Cascade)
+}
+
+model UserBalance {
+  userId String @id
+  credits Int @default(0)
+}

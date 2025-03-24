@@ -60,7 +60,7 @@ export default function TopicCard({
             {description}
             </p>
             </div>
-          <Badge variant={statuscolor as "warning" | "success"}>{status}</Badge>
+          <Badge>{status}</Badge>
 
           </div>
 

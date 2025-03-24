@@ -10,17 +10,20 @@ import WorkflowFeatures from "./_components/workflowFeatures";
 import { BackgroundLines } from "@/components/ui/background-lines";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import WorkflowsTable from "./_components/WorkflowsTable";
 
 // Define the type for a workflow object
-interface Workflow {
+interface workflow {
   id: string;
-  name: string;
   userId: string;
+  name: string;
   description: string | null;
   defination: string;
   status: string;
+  creditsCost: number;
   createdAt: Date;
   updatedAt: Date;
+  lastRunAt: Date | null;
 }
 
 function WorkflowPage() {
@@ -56,7 +59,7 @@ function UserWorkflowSkeleton() {
 }
 
 function UserWorkFlows() {
-  const [workflows, setWorkflows] = useState<Workflow[]>([]); // Define type for workflows
+  const [workflows, setWorkflows] = useState<workflow[]>([]); // Define type for workflows
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null); // Define type for error
   const [searchQuery, setSearchQuery] = useState("");
@@ -82,9 +85,6 @@ function UserWorkFlows() {
     fetchWorkflows();
   };
 
-  const filteredWorkflows = workflows.filter((workflow) =>
-    workflow.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   if (loading) {
     return <UserWorkflowSkeleton />;
@@ -132,38 +132,8 @@ function UserWorkFlows() {
 
       {/* Workflow cards section */}
       <div className="flex-1 min-h-0 overflow-auto pt-5">
-        <div className="py-2 flex items-center justify-between">
-          <div className="flex items-center w-full max-w-sm space-x-2 rounded-lg border px-3.5 py-2">
-            <Search className="h-4 w-4" />
-            <Input
-              type="search"
-              placeholder="Search workflows"
-              className="w-full border-0 h-8 font-semibold"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              aria-label="Search workflows"
-            />
-          </div>
-          <Button
-            className="border-dashed"
-            variant="outline"
-            onClick={handleRefresh}
-            disabled={loading}
-          >
-            <RefreshCcw className="w-4 h-4 mr-2" />
-            Refresh
-          </Button>
-        </div>
         <div className="space-y-4 my-5">
-          {filteredWorkflows.length > 0 ? (
-            filteredWorkflows.map((workflow) => (
-              <WorkflowCard refresh={handleRefresh} key={workflow.id} workflow={workflow} />
-            ))
-          ) : (
-            <p className="text-center text-muted-foreground">
-              No workflows match your search.
-            </p>
-          )}
+          <WorkflowsTable workflows={workflows} refresh={handleRefresh}/>
         </div>
       </div>
     </div>

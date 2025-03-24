@@ -29,6 +29,13 @@ export const GoogleGenerativeAI = {
             hideHandel: false,
         },
         {
+            name: "Agent mode",
+            type: TaskParamType.TOOGLE_INPUT,
+            helperText: "Enable this option to activate AI agent mode",
+            required: true,
+            hideHandel: true,
+        },
+        {
             name: "Model",
             type: TaskParamType.COMBO_BOX,
             helperText: "Select a model",
@@ -54,7 +61,7 @@ export const GoogleGenerativeAI = {
             type: TaskParamType.RANGE_SLIDER,
             required: true,
             hideHandel: true,
-        },
+        }
     ] as const,
     outputs:[
         {

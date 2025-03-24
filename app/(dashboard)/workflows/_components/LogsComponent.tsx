@@ -28,8 +28,7 @@ import { Clock3 } from "lucide-react";
       <CardTitle className="text-sm font-semibold">Logs</CardTitle>
       <CardDescription className="text-xs text-muted-foreground">Run logs for this phase</CardDescription>
   </CardHeader>
-      <Terminal className="h-full w-full">
-        <TypingAnimation>&gt; Logs . . . </TypingAnimation>
+      <Terminal className="h-full w-full px-2">
         {logs && logs.length > 0 ? (
           <>
             {logs.map((log) => (

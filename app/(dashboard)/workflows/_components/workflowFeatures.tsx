@@ -4,6 +4,7 @@ import { DownloadIcon, Workflow, Activity, BookDashed,TvMinimalPlay } from "luci
 import { GlowingEffect } from "@/components/ui/glowing-effect";
 import { LucideIcon } from "lucide-react";
 import { LogsComponent } from "./LogsComponent";
+import { MonthlyRunChart } from "./MonthlyRunChart";
 
 export default function WorkflowFeatures() {
 
@@ -36,30 +37,28 @@ export default function WorkflowFeatures() {
 
   return (
     
-    <div className="pb-6">
-        
-    <ul className="flex gap-4 w-full">
+<div className="flex items-center pb-6 gap-4">
+  {/* Left Section: Grid Items */}
+  <ul className="grid grid-cols-2 gap-4 w-[440px] flex-shrink-0">
     {items.map((item, index) => {
       const IconComponent = iconMap[item.icon];
       return (
         <GridItem
           key={index}
-          area="flex-1 lg:basis-1/4 flex-shrink"
+          area="flex-1"
           icon={<IconComponent className="h-4 w-4 text-black dark:text-neutral-400" />}
           title={item.title}
           description="3"
         />
       );
     })}
-        <GridItem
-          key={"index"}
-          area="flex-1 lg:basis-1/4 flex-shrink"
-          icon={<DownloadIcon className="h-4 w-4 text-black dark:text-neutral-400" />}
-          title={"Title"}
-          description="3"
-        />
-    </ul>
+  </ul>
+
+  {/* Right Section: Chart taking remaining space */}
+  <div className="flex-1">
+    <MonthlyRunChart className="w-full h-full" />
   </div>
+</div>
   );
 }
 
@@ -73,7 +72,7 @@ interface GridItemProps {
 const GridItem = ({ area, icon, title, description }: GridItemProps) => {
   return (
     <li className={`list-none ${area}`}>
-      <div className="relative rounded-xl border  p-2 md:p-3">
+      <div className="relative rounded-lg border  p-2 md:p-3">
         <GlowingEffect
           blur={3}
           borderWidth={2}

@@ -4,8 +4,6 @@ import {FloatingDockDemo} from '@/components/DockMenu';
 import Header from '@/components/Header';
 
 
-
-
 function layout({children}:{children: React.ReactNode}) {
 
 

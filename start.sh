@@ -9,7 +9,7 @@ if ! command -v crawl4ai &> /dev/null; then
     pip install -U crawl4ai
     pip install crawl4ai --pre
     crawl4ai-setup
-fi  # <-- Added this 'fi' to close the 'if' block properly
+fi
 
 # Check if pnpm is installed
 if ! command -v pnpm &> /dev/null; then

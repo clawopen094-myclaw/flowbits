@@ -7,7 +7,9 @@ export const taskSchema = z.object({
   description: z.string(),
   status: z.string(),
   updatedAt: z.string(),
-  lastRunAt: z.string()
+  lastRunAt: z.string(),
+  creditsCost: z.number(),
+  cron: z.string()
 })
 
 export type Task = z.infer<typeof taskSchema>

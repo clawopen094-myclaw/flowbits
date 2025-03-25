@@ -1,90 +1,30 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-
 import { Badge } from "@/components/ui/badge"
-import { Checkbox } from "@/components/ui/checkbox"
-
 import { workflowStatus } from "../data/data"
 import { Task } from "../data/schema"
 import { DataTableColumnHeader } from "./data-table-column-header"
-import { cn } from "@/lib/utils"
-import { CoinsIcon } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import Link from "next/link"
+import { DataTableRowActions } from "./data-table-row-actions"
+import DataTableSchedule from "./data-table-schedule"
+import { WorkflowStatus } from "@/status/WorkflowStatus"
 
-export const columns: ColumnDef<Task>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-        className="translate-y-[2px]"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-        className="translate-y-[2px]"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
+
+export const columns = (refresh: () => void): ColumnDef<Task>[] => [
   {
     accessorKey: "index",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="ID" />
     ),
-    cell: ({ row }) => <div className="w-[120px]">
+    cell: ({ row }) => <div className="w-[30px]">
       <Link href={`/workflow/editor/${row.original.id}`} className="flex flex-col gap-0.5">
       {row.getValue("index")}
       </Link>
     </div>,
     enableSorting: false,
     enableHiding: false
-  },
-  {
-    accessorKey: "name",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Name" />
-    ),
-    cell: ({ row }) => {
-
-      return (
-        <div className="flex">
-        <Link href={`/workflow/editor/${row.original.id}`} className="flex space-x-2">
-          <span className="max-w-[500px] truncate font-medium">
-            {row.getValue("name")}
-          </span>
-        </Link>
-        </div>
-      )
-    }
-  },
-  {
-    accessorKey: "description",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Description" />
-    ),
-    cell: ({ row }) => {
-      return (
-        <div className="flex">
-        <Link href={`/workflow/editor/${row.original.id}`} className="flex space-x-2">
-          <span className="max-w-[500px] truncate font-medium">
-            {row.getValue("description")}
-          </span>
-        </Link>
-        </div>
-      )
-    }
   },
   {
     accessorKey: "status",
@@ -101,7 +41,7 @@ export const columns: ColumnDef<Task>[] = [
       }
 
       return (
-        <div className="flex w-[100px] items-center">
+        <div className="flex w-[60px] items-center">
           {status && <Badge variant="outline">{status.label}</Badge>}
         </div>
       )
@@ -109,18 +49,55 @@ export const columns: ColumnDef<Task>[] = [
     filterFn: (row, id, value) => {
       return value.includes(row.getValue(id))
     },
+    enableSorting: false,
+    enableHiding: false,
+  },
+  {
+    accessorKey: "name",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Name" />
+    ),
+    cell: ({ row }) => {
+
+      return (
+        <div className="flex flex-col gap-1">
+        <Link href={`/workflow/editor/${row.original.id}`} className="flex space-x-2">
+          <span className="max-w-[300px] truncate font-medium overflow-hidden">
+            {row.getValue("name")}
+          </span>
+        </Link>
+        <DataTableSchedule id={row.original.id} isDraft={row.original.status === WorkflowStatus.DRAFT} creditsCost={row.original.creditsCost || 0} cron={row.original.cron} refresh={refresh}/>
+        </div>
+      )
+    },
+    enableSorting: false,
+    enableHiding: false,
+  },
+  {
+    accessorKey: "description",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Description" />
+    ),
+    cell: ({ row }) => {
+      return (
+        <div className="flex">
+        <Link href={`/workflow/editor/${row.original.id}`} className="flex space-x-2">
+          <span className="max-w-[300px] truncate font-medium overflow-hidden">
+            {row.getValue("description")}
+          </span>
+        </Link>
+        </div>
+      )
+    },
+    enableSorting: false,
+    enableHiding: false,
   },
   {
     accessorKey: "updatedAt",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Updated At" />
+      <DataTableColumnHeader column={column} title="Last Updated" />
     ),
-    cell: ({ row }) => <div className="w-[100px]">{
-      
-      formatDistanceToNow(row.getValue("updatedAt"),{addSuffix:true})
-      
-      
-      }</div>,
+    cell: ({ row }) => <div className="w-[100px]">{row.getValue("updatedAt") ? formatDistanceToNow(row.getValue("updatedAt"),{addSuffix:true}) : "Never"}</div>,
     enableSorting: false,
     enableHiding: false,
   },
@@ -130,9 +107,16 @@ export const columns: ColumnDef<Task>[] = [
       <DataTableColumnHeader column={column} title="Last run" />
     ),
     cell: ({ row }) => <div className="w-[100px]">{
-      formatDistanceToNow(row.getValue("lastRunAt"),{addSuffix:true})
+      row.getValue("lastRunAt") ? formatDistanceToNow(row.getValue("lastRunAt"),{addSuffix:true}) : "Never"
       }</div>,
     enableSorting: false,
     enableHiding: false,
-  }
+  },
+  {
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Actions" />
+    ),
+    id: "actions",
+    cell: ({ row }) => <DataTableRowActions row={row} refresh={refresh} />,
+  },
 ]

@@ -43,7 +43,7 @@ export const columns: ColumnDef<Task>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="ID" />
     ),
-    cell: ({ row }) => <div className="w-[120px]">
+    cell: ({ row }) => <div className="w-[140px]">
       <Link href={`/workflow/runs/${row.original.workflowId} /${row.getValue("id")}`} className="flex flex-col gap-0.5">
       {row.getValue("id")}
       <div className="flex items-center gap-4">
@@ -67,7 +67,7 @@ export const columns: ColumnDef<Task>[] = [
         <div className="flex">
         <Link href={`/workflow/runs/${row.original.workflowId} /${row.getValue("id")}`} className="flex space-x-2">
           {label && <Badge variant="outline">{label.label}</Badge>}
-          <span className="max-w-[500px] truncate font-medium">
+          <span className="max-w-[500px] truncate font-medium overflow-hidden">
             {row.getValue("name")}
           </span>
         </Link>

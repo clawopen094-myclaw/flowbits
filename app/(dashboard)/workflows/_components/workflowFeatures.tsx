@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Workflow, Activity, BookDashed,TvMinimalPlay } from "lucide-react";
+import { DownloadIcon, Workflow, Activity, BookDashed,TvMinimalPlay } from "lucide-react";
 import { GlowingEffect } from "@/components/ui/glowing-effect";
 import { LucideIcon } from "lucide-react";
 import { LogsComponent } from "./LogsComponent";
@@ -17,7 +17,7 @@ export default function WorkflowFeatures() {
             title: "Active"
         },
         {
-            icon: "BookDashed",
+            icon: "DownloadIcon",
             title: "Draft"
         },
         {
@@ -29,14 +29,14 @@ export default function WorkflowFeatures() {
     const iconMap: Record<string, LucideIcon> = {
         Workflow,
         Activity,
-        BookDashed,
+        DownloadIcon,
         TvMinimalPlay,
       };
 
 
   return (
     
-    <div className="min-h-[10rem] max-h-[12rem]">
+    <div className="pb-6">
         
     <ul className="flex gap-4 w-full">
     {items.map((item, index) => {
@@ -51,25 +51,13 @@ export default function WorkflowFeatures() {
         />
       );
     })}
-
-    <div className="hidden xl:block flex-1 basis-1/2">
-      <li className={`min-h-[10rem] max-h-[12rem] list-none `}>
-        <div className="relative rounded-2.5xl border p-2 rounded-3xl md:p-3 ">
-          <GlowingEffect
-            blur={3}
-            borderWidth={3}
-            spread={100}
-            glow={true}
-            disabled={false}
-            proximity={64}
-            inactiveZone={0.01}
-          />
-          <div className="dark:shadow-[0px_0px_27px_0px_#2D2D2D]">
-              {/* <LogsComponent/> */}
-          </div>
-          </div>
-      </li>
-    </div>
+        <GridItem
+          key={"index"}
+          area="flex-1 lg:basis-1/4 flex-shrink"
+          icon={<DownloadIcon className="h-4 w-4 text-black dark:text-neutral-400" />}
+          title={"Title"}
+          description="3"
+        />
     </ul>
   </div>
   );
@@ -84,26 +72,29 @@ interface GridItemProps {
 
 const GridItem = ({ area, icon, title, description }: GridItemProps) => {
   return (
-    <li className={`min-h-[10rem] max-h-[12rem] list-none ${area}`}>
-      <div className="relative rounded-2.5xl border  p-2 rounded-3xl md:p-3">
+    <li className={`list-none ${area}`}>
+      <div className="relative rounded-xl border  p-2 md:p-3">
         <GlowingEffect
           blur={3}
-          borderWidth={3}
+          borderWidth={2}
           spread={100}
           glow={true}
-          disabled={false}
+          disabled={true}
           proximity={64}
-          inactiveZone={0.01}
+          inactiveZone={0}
         />
-        <div className="relative flex flex-col justify-between gap-6 overflow-hidden rounded-xl border-0.75 p-6  dark:shadow-[0px_0px_27px_0px_#2D2D2D] md:p-6  bg-gray-100/90 dark:bg-black">
+        <div className="relative flex flex-col justify-between gap-6 overflow-hidden rounded-xl border-0.75 p-1  md:p-1">
           <div className="relative flex flex-1 flex-col justify-between gap-3">
-            <div className="w-min rounded-lg border border-gray-600 p-2 ">
-              {icon}
-            </div>
-            <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-min rounded-lg border border-gray-600 p-2 ">
+                {icon}
+              </div>
               <h3 className="text-sm/normal font-normal font-sans md:text-xl text-black dark:text-neutral-400 whitespace-nowrap  ">
-                {title}
+                  {title}
               </h3>
+            </div>
+
+            <div className="space-y-3 ml-3">
               <h2
                 className="[&_b]:md:font-semibold [&_strong]:md:font-semibold font-sans text-lg/[1.125rem] md:text-2xl/[1.375rem] text-black dark:text-white"
               >

@@ -21,6 +21,7 @@ interface workflow {
   defination: string;
   status: string;
   creditsCost: number;
+  cron: string | null;
   createdAt: Date;
   updatedAt: Date;
   lastRunAt: Date | null;
@@ -29,9 +30,9 @@ interface workflow {
 function WorkflowPage() {
   return (
     <div className="flex-1 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between px-1">
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold">Workflows</h1>
+          <h1 className="text-2xl px-0.5 font-semibold">Workflows</h1>
           <p className="text-muted-foreground">Manage all your workflows</p>
         </div>
         <CreateWorkflowDialog />
@@ -104,7 +105,7 @@ function UserWorkFlows() {
 
   if (workflows.length === 0) {
     return (
-      <BackgroundLines className="flex items-center justify-center h-[calc(100vh-240px)]">
+      <BackgroundLines className="flex items-center justify-center h-[calc(100vh-240px)] w-full">
         <div className="text-center space-y-4">
           <div className="rounded-full bg-accent w-20 h-20 flex items-center justify-center mx-auto">
             <Workflow size={40} className="stroke-primary" />
@@ -124,15 +125,15 @@ function UserWorkFlows() {
   return (
     <div className="flex flex-col">
       {/* Features section */}
-      <div className="flex-none">
+      <div className="flex-none p-1">
         <div className="sm:flex sm:flex-wrap md:grid md:grid-cols-1">
           <WorkflowFeatures />
         </div>
       </div>
 
       {/* Workflow cards section */}
-      <div className="flex-1 min-h-0 overflow-auto pt-5">
-        <div className="space-y-4 my-5">
+      <div className="flex-1 min-h-0 overflow-auto">
+        <div className="space-y-4">
           <WorkflowsTable workflows={workflows} refresh={handleRefresh}/>
         </div>
       </div>

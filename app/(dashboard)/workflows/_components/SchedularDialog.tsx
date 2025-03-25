@@ -30,13 +30,52 @@ const DAYS = [
   { name: "Sat", cronId: 6 },
 ]
 
+function SchedularDialog(props:{workflowId:string, cron:string, refresh:()=>void}) {
+  // Parse initial cron values
+  const parseCron = (cron: string) => {
+    const parts = cron.split(' ');
+    if (parts.length < 5) return null;
 
-function SchedularDialog(props:{workflowId:string,cron:string,refresh:()=>void}) {
-  const [hours, setHours] = useState("09")
-  const [minutes, setMinutes] = useState("00")
-  const [period, setPeriod] = useState<"AM" | "PM">("AM")
-  const [selectedDays, setSelectedDays] = useState<number[]>([])
+    // Time parsing
+    const minutes = parts[0].padStart(2, '0');
+    const hours24 = parseInt(parts[1], 10);
+    const hours12 = hours24 % 12 || 12; // Convert 0-23 to 12-hour format
+    const period = hours24 >= 12 ? 'PM' : 'AM';
+
+    // Day parsing
+    const days = parts[4] === '*' ? [] : parts[4].split(',').map(Number).filter(d => d >= 0 && d <= 6);
+
+    return { minutes, hours: hours12.toString().padStart(2, '0'), period, days };
+  };
+
+  // Initialize state with cron values if available
+  const initialValues = props.cron ? parseCron(props.cron) : null;
+
+  const [hours, setHours] = useState(initialValues?.hours || '09')
+  const [minutes, setMinutes] = useState(initialValues?.minutes || '00')
+  const [period, setPeriod] = useState<"AM" | "PM">(initialValues?.period as "PM" || "AM")
+  const [selectedDays, setSelectedDays] = useState<number[]>(initialValues?.days || [])
   const [cronExpression, setCronExpression] = useState(props.cron || "")
+
+  // Update state when cron prop changes
+  useEffect(() => {
+    if (props.cron) {
+      const parsed = parseCron(props.cron);
+      if (parsed) {
+        setHours(parsed.hours);
+        setMinutes(parsed.minutes);
+        setPeriod(parsed.period as "AM" | "PM");
+        setSelectedDays(parsed.days);
+        setCronExpression(props.cron);
+      }
+    } else {
+      setHours('09');
+      setMinutes('00');
+      setPeriod('AM');
+      setSelectedDays([]);
+      setCronExpression('');
+    }
+  }, [props.cron])
 
   // Handle day selection
   const toggleDay = (cronId: number) => {
@@ -73,12 +112,11 @@ function SchedularDialog(props:{workflowId:string,cron:string,refresh:()=>void})
     }
   };
 
-
   const crontohumantext = (cron:string) => {
     return cronstrue.toString(cron, {
         verbose: false,
         dayOfWeekStartIndexZero: true,
-      }).replace(/only on Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, and Saturday/, "Everyday");
+      }).replace(/only on Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, and Saturday/, "Everyday").replace(/Sunday/,"SUN").replace(/Monday/,"MON").replace(/Tuesday/,"TUE").replace(/Wednesday/,"WED").replace(/Thursday/,"THU").replace(/Friday/,"FRI").replace(/Saturday/,"SAT");
   }
 
   // Update cron expression when inputs change
@@ -92,7 +130,6 @@ function SchedularDialog(props:{workflowId:string,cron:string,refresh:()=>void})
   const hoursOptions = Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, "0"))
 
   const minutesOptions = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, "0"))
-
 
   const savemutation = useMutation({
     mutationFn: UpdateWorkflowCrons,
@@ -125,13 +162,13 @@ function SchedularDialog(props:{workflowId:string,cron:string,refresh:()=>void})
         {props.cron && (
             <div className="flex items-center gap-1">
             <ClockIcon />
-            {crontohumantext(props.cron)}
+            <span className="overflow-x-scroll">{crontohumantext(props.cron)}</span>
             </div>
         )}
 
         {!props.cron && (
         <div className="flex items-center gap-1">
-        <TriangleAlertIcon className="h-3 w-3 mr-1"/>
+        <TriangleAlertIcon className="h-3 w-3"/>
         <span className="">Set schedule</span>
         </div>)}
 
@@ -170,7 +207,14 @@ function SchedularDialog(props:{workflowId:string,cron:string,refresh:()=>void})
                     ))}
                 </SelectContent>
                 </Select>
-                <Select value={period} onValueChange={(value: "AM" | "PM") => setPeriod(value)}>
+                <Select 
+                  value={period} 
+                  onValueChange={(value: string) => {
+                    if (value === "AM" || value === "PM") {
+                      setPeriod(value);
+                    }
+                  }}
+                >
                 <SelectTrigger className="w-[80px]">
                     <SelectValue placeholder="AM/PM" />
                 </SelectTrigger>
@@ -206,7 +250,6 @@ function SchedularDialog(props:{workflowId:string,cron:string,refresh:()=>void})
             <div className="space-y-2 pt-2 border-t">
             <h4 className="text-sm font-medium text-center">Scheduled:{"  "}{getScheduleDescription()}</h4>
             </div>
-            {/* <div className="text-xs text-muted-foreground">Cron Expression: {cronExpression}</div> */}
         </CardContent>
         </Card>
         </div>

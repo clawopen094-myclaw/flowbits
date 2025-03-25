@@ -10,7 +10,7 @@ function layout({children}:{children: React.ReactNode}) {
 
 
   return (
-        <div className='flex min-h-screen'>
+        <div className='flex flex-col flex-1'>
             <FloatingDockDemo/>
             <div className="flex flex-col flex-1">
                 <Header/>

@@ -3,6 +3,7 @@ import { ExecuteWorkflow } from "@/lib/workflow/executeWorkflow";
 import { TaskRegistry } from "@/lib/workflow/task/registry";
 import { ExecutionPhaseStatus, WorkflowExecutionPlan, WorkflowExecutionStatus, WorkflowExecutionTrigger } from "@/status/WorkflowStatus";
 import { timingSafeEqual } from "crypto";
+import { NextRequest } from "next/server";
 
 
 function isValidSecret(secret:string){
@@ -17,8 +18,8 @@ function isValidSecret(secret:string){
 }
 
 
-export async function GET(request: Request){
-    const authHeader = request.headers.get('Authorization')
+export async function GET(request: NextRequest){
+    const authHeader = request.headers.get('authorization')
     if (!authHeader || !authHeader.startsWith("Bearer ")){
         return Response.json({ error: "Unauthorized" },{ status: 401 })
     }

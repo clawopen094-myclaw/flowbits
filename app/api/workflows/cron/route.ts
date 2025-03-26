@@ -26,11 +26,11 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 }); // Handle errors properly
     }
 }
-
+``
 
 function triggerWorkflow(workflowId: string) {
     const triggerApiUrl = getAppUrl(`api/workflows/execute?workflowId=${workflowId}`);
-    console.log(triggerApiUrl)
+    console.log("Requesting URL:", triggerApiUrl);
     fetch(triggerApiUrl,{
         headers: {
             Authorization: `Bearer ${process.env.SECRET_KEY!}`

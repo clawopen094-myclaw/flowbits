@@ -35,8 +35,8 @@ export async function ExecuteWorkflow(executionId:string){
     let totalCreditsRequired = 0
     for (const phase of execution.phases){
         totalCreditsRequired += phase.creditsCost || 0;
-
     }
+    
     const userCreditBalance = await GetAvailableCredits();
     if (userCreditBalance > totalCreditsRequired){
         for (const phase of execution.phases){

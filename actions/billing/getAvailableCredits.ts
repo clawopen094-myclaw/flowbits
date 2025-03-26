@@ -3,19 +3,21 @@
 import prisma from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 
-export async function GetAvailableCredits(){
-    const {userId} = await auth();
-    if (!userId){
-        throw new Error("Unauthenticated.")
+export async function GetAvailableCredits(providedUserId?: string) {
+    
+    const userId = providedUserId ?? (await auth())?.userId;
+
+    if (!userId) {
+        throw new Error("Unauthenticated.");
     }
 
     const balance = await prisma.userBalance.findUnique({
         where: {
             userId
         }
-    })
+    });
 
     if (!balance) return -1;
 
-    return balance.credits
+    return balance.credits;
 }

@@ -20,7 +20,7 @@ export async function GET(request: Request) {
             triggerWorkflow(workflow.id);
         }
 
-        return NextResponse.json({ message: "Cron job triggered!" }, { status: 200 }); // Use NextResponse
+        return NextResponse.json({ workflows: workflows.length }, { status: 200 }); // Use NextResponse
     } catch (error) {
         console.error("Error in /api/workflows/cron:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 }); // Handle errors properly

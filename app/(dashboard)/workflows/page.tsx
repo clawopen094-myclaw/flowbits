@@ -32,7 +32,7 @@ function WorkflowPage() {
     <div className="flex-1 space-y-6">
       <div className="flex items-center justify-between px-1">
         <div className="space-y-1">
-          <p className="text-xl px-0.5 font-semibold text-muted-foreground">Manage all your workflows</p>
+          <p className="text-lg px-0.5 text-muted-foreground">Manage all your workflows</p>
         </div>
         <CreateWorkflowDialog />
       </div>

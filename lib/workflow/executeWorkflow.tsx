@@ -15,7 +15,7 @@ import { GetAvailableCredits } from "@/actions/billing/getAvailableCredits";
 import { toast } from "sonner";
 
 
-export async function ExecuteWorkflow(executionId:string){
+export async function ExecuteWorkflow(executionId:string,nextRunAt?: Date){
     const execution  = await prisma.workflowExecution.findUnique({
         where:{
             id: executionId
@@ -28,7 +28,7 @@ export async function ExecuteWorkflow(executionId:string){
     }
 
     const environment = { phases:{} };
-    await initializeWorkflowExecution(executionId,execution.workflowId);
+    await initializeWorkflowExecution(executionId,execution.workflowId,nextRunAt);
     await initializePhaseStatus(execution);
     let creditsConsumed = 0;
     let executionFailed = false;
@@ -59,7 +59,7 @@ export async function ExecuteWorkflow(executionId:string){
 }
 
 
-async function initializeWorkflowExecution(executionId:string,workflowId:string){
+async function initializeWorkflowExecution(executionId:string,workflowId:string,nextRunAt?: Date){
     await prisma.workflowExecution.update({
         where:{
             id: executionId
@@ -75,7 +75,8 @@ async function initializeWorkflowExecution(executionId:string,workflowId:string)
         data:{
             lastRunAt: new Date(),
             lastRunId: executionId,
-            lastRunStatus: WorkflowExecutionStatus.RUNNING
+            lastRunStatus: WorkflowExecutionStatus.RUNNING,
+            ...(nextRunAt && {nextRunAt}),
         }
     })
 }

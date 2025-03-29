@@ -24,7 +24,7 @@ function CustomDialogueHeader(props: props) {
             <div className="flex flex-col items-center gap-2 mb-2">
                 {Icon && <Icon className={cn("stroke-primary",props.iconClassName)} size={30}/>}
                 {props.title && <p className={cn("text-xl text-primary",props.titleClassName)}>{props.title}</p>}
-                {props.subTitle && <p className={cn("text-sm text-muted-foreground",props.subtitleClassName)}>{props.subTitle}</p>}
+                {props.subTitle && <p className={cn("text-sm text-muted-foreground px-6 text-center",props.subtitleClassName)}>{props.subTitle}</p>}
                 
             </div>
         </DialogTitle>

@@ -2,6 +2,7 @@ import prisma from "@/lib/prisma";
 import { ExecuteWorkflow } from "@/lib/workflow/executeWorkflow";
 import { TaskRegistry } from "@/lib/workflow/task/registry";
 import { ExecutionPhaseStatus, WorkflowExecutionPlan, WorkflowExecutionStatus, WorkflowExecutionTrigger } from "@/status/WorkflowStatus";
+import { CronExpressionParser } from "cron-parser";
 import { timingSafeEqual } from "crypto";
 import { NextRequest } from "next/server";
 
@@ -52,31 +53,38 @@ export async function GET(request: NextRequest){
         return Response.json({ error: "No workflow execution plan found" },{ status: 400 })
     }
 
-    const execution = await prisma.workflowExecution.create({
-        data:{
-            workflowId,
-            userId: workflow.userId,
-            definition: workflow.defination,
-            status: WorkflowExecutionStatus.PENDING,
-            startedAt: new Date(),
-            trigger: WorkflowExecutionTrigger.CRON,
-            phases: {
-                create: executionPlan.flatMap((phase)=>{
-                    return phase.nodes.flatMap((node)=>{
-                        return {
-                            userId:workflow.userId,
-                            status: ExecutionPhaseStatus.CREATED,
-                            number: phase.phase,
-                            node: JSON.stringify(node),
-                            name: TaskRegistry[node.data.type].label,
-                            creditsCost: TaskRegistry[node.data.type].credits,
-                        }
-                    })
-                })
-            },
-        }
-    })
+    try {
+        const cron = CronExpressionParser.parse(workflow.cron!)
+        const nextRun = cron.next().toDate();
 
-    await ExecuteWorkflow(execution.id)
+        const execution = await prisma.workflowExecution.create({
+            data:{
+                workflowId,
+                userId: workflow.userId,
+                definition: workflow.defination,
+                status: WorkflowExecutionStatus.PENDING,
+                startedAt: new Date(),
+                trigger: WorkflowExecutionTrigger.CRON,
+                phases: {
+                    create: executionPlan.flatMap((phase)=>{
+                        return phase.nodes.flatMap((node)=>{
+                            return {
+                                userId:workflow.userId,
+                                status: ExecutionPhaseStatus.CREATED,
+                                number: phase.phase,
+                                node: JSON.stringify(node),
+                                name: TaskRegistry[node.data.type].label,
+                                creditsCost: TaskRegistry[node.data.type].credits,
+                            }
+                        })
+                    })
+                },
+            }
+        })
+
+    await ExecuteWorkflow(execution.id,nextRun)
     return new Response(null,{ status: 200 })
+    } catch (error:any) {
+        return Response.json({error: error.message},{status:400})
+    }
 }

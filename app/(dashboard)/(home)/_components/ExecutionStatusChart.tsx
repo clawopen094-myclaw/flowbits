@@ -9,7 +9,7 @@ import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 
 type chartData = Awaited<ReturnType<typeof getWorkflowExecutionStats>>
 
-function MonthlyExecutionChart({data}:{data:chartData}) {
+function ExecutionStatusChart({data}:{data:chartData}) {
     const chartCongif = {
         success: {
             label: "Success",
@@ -21,18 +21,18 @@ function MonthlyExecutionChart({data}:{data:chartData}) {
         }
     }
   return (
-    <Card className="bg-gradient-to-br from-primary/5 via-primary/0 to-background">
-        <CardHeader className="p-3">
+    <Card>
+        <CardHeader className="">
             <CardTitle className="flex flex-1 gap-3 items-center">
-                <Layers2Icon className="w-4 h-4 text-primary" />
-                <span className="text-sm">Workflows</span>
+                <Layers2Icon className="w-5 h-5 text-primary" />
+                workflows
             </CardTitle>
             <CardDescription>
-                <span className="text-xs">Daily number of successfull and failed workflow executions</span>
+                Daily number of successfull and failed workflow executions
             </CardDescription>
         </CardHeader>
-        <CardContent className="p-3 pt-0">
-            <ChartContainer config={chartCongif} className="max-h-[150px] w-full">
+        <CardContent>
+            <ChartContainer config={chartCongif} className="max-h-[200px] w-full">
                 <AreaChart data={data} height={200} accessibilityLayer margin={{top: 20}}>
                 <CartesianGrid vertical={false}/>
                 <XAxis 
@@ -60,4 +60,4 @@ function MonthlyExecutionChart({data}:{data:chartData}) {
   )
 }
 
-export default MonthlyExecutionChart
+export default ExecutionStatusChart

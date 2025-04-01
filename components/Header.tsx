@@ -1,7 +1,6 @@
 "use client";
 
 import React from 'react'
-import Logo from "@/components/Logo";
 import myLogo from "@/public/Logo.png";
 import {
     SignInButton,
@@ -10,10 +9,8 @@ import {
     SignedOut,
     UserButton,
   } from '@clerk/nextjs'
-  import {ThemeToogle} from '@/components/themeToogle';
 import {FeedbackDropdown} from "@/components/FeedbackFormDialog"
 import { NavMenu } from './NavMenu';
-import { DotIcon } from 'lucide-react';
 import Image from 'next/image';
 import UserAvailableCreditsBadge from './UserAvailableCreditsBadge';
   

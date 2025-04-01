@@ -3,27 +3,38 @@
 import { DownloadIcon, Workflow, Activity, BookDashed,TvMinimalPlay } from "lucide-react";
 import { GlowingEffect } from "@/components/ui/glowing-effect";
 import { LucideIcon } from "lucide-react";
-import { LogsComponent } from "./LogsComponent";
-import { MonthlyRunChart } from "./MonthlyRunChart";
+import { period } from "@/types/analytics";
+import { getWorkflowExecutionStats } from "@/actions/analytics/getWorkflowExecutionStats";
+import { useCallback, useEffect, useState } from "react";
+import MonthlyExecutionChart from "./MonthlyRunChart";
+import ReactCountUpWrapper from "@/components/ReactCountUpWrapper";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+
+type responseData = Awaited<ReturnType<typeof getWorkflowExecutionStats>>
 
 export default function WorkflowFeatures() {
 
     const items = [
         {
-            icon: "Workflow",
-            title: "All Workflows"
+          title: "All Workflows",
+          value: 1,
+          icon: Workflow,
         },
         {
-            icon: "Activity",
-            title: "Active"
+          title: "Active",
+          value: 1,
+          icon: Activity,
         },
         {
-            icon: "DownloadIcon",
-            title: "Draft"
+          title: "Draft",
+          value: 0,
+          icon: DownloadIcon,
         },
         {
-            icon: "TvMinimalPlay",
-            title: "Monthly Runs"
+          title: "Monthly Runs",
+          value: 120,
+          icon: TvMinimalPlay,
         }
     ]
 
@@ -35,74 +46,77 @@ export default function WorkflowFeatures() {
       };
 
 
+      const curDate = new Date();
+
+      const selectedPeriod: period = {
+          month: curDate.getMonth(),
+          year: curDate.getFullYear(),
+      };
+      
+      const [data,setData] = useState<responseData>([])
+      const [loading,setLoading] = useState(true)
+      const [error,setError] = useState<string | null>()
+
+      const fetchWorkflows = useCallback(async () => {
+        setLoading(true);
+        try {
+        const data = await getWorkflowExecutionStats(selectedPeriod);
+        setData(data);
+        setError(null);
+        } catch (err) {
+        setError("Failed to fetch workflows. Please try again.");
+        } finally {
+        setLoading(false);
+        }
+      }, []);
+
+      useEffect(() => {
+        fetchWorkflows();
+      }, [fetchWorkflows]);
+
+
+  
   return (
     
 <div className="flex items-center pb-6 gap-4">
   {/* Left Section: Grid Items */}
   <ul className="grid grid-cols-2 gap-4 w-[440px] flex-shrink-0">
     {items.map((item, index) => {
-      const IconComponent = iconMap[item.icon];
       return (
-        <GridItem
-          key={index}
-          area="flex-1"
-          icon={<IconComponent className="h-4 w-4 text-black dark:text-neutral-400" />}
-          title={item.title}
-          description="3"
-        />
+        <GridItem title={item.title} value={item.value} icon={item.icon}/>
       );
     })}
   </ul>
 
   {/* Right Section: Chart taking remaining space */}
   <div className="flex-1">
-    <MonthlyRunChart className="w-full h-full" />
+    <MonthlyExecutionChart data={data} />
   </div>
 </div>
   );
 }
 
-interface GridItemProps {
-  area: string;
-  icon: React.ReactNode;
-  title: string;
-  description: React.ReactNode;
+
+interface Props{
+  title:string;
+  value: number;
+  icon: LucideIcon
 }
 
-const GridItem = ({ area, icon, title, description }: GridItemProps) => {
-  return (
-    <li className={`list-none ${area}`}>
-      <div className="relative rounded-lg border  p-2 md:p-3">
-        <GlowingEffect
-          blur={3}
-          borderWidth={2}
-          spread={100}
-          glow={true}
-          disabled={true}
-          proximity={64}
-          inactiveZone={0}
-        />
-        <div className="relative flex flex-col justify-between gap-6 overflow-hidden rounded-xl border-0.75 p-1  md:p-1">
-          <div className="relative flex flex-1 flex-col justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-min rounded-lg border border-gray-600 p-2 ">
-                {icon}
-              </div>
-              <h3 className="text-sm/normal font-normal font-sans md:text-xl text-black dark:text-neutral-400 whitespace-nowrap  ">
-                  {title}
-              </h3>
-            </div>
 
-            <div className="space-y-3 ml-3">
-              <h2
-                className="[&_b]:md:font-semibold [&_strong]:md:font-semibold font-sans text-lg/[1.125rem] md:text-2xl/[1.375rem] text-black dark:text-white"
-              >
-                {description}
-              </h2>
-            </div>
+const GridItem = (props:Props) => {
+  return (
+    <Card className="relative overflow-hidden h-full bg-gradient-to-br from-primary/5 via-primary/0 to-background">
+      <CardHeader className="flex p-4">
+          <CardTitle><span className="text-lg text-primary/90">{props.title}</span></CardTitle>
+          <props.icon size={90} className="text-muted-foreground absolute -bottom-5 -right-6 stroke-primary opacity-10"/>
+      </CardHeader>
+      <CardContent className="p-4 pt-0">
+          <div className="text-2xl font-bold text-primary/80 dark:text-primary/80">
+              <ReactCountUpWrapper value={props.value}/>
           </div>
-        </div>
-      </div>
-    </li>
+      </CardContent>
+    </Card>
   );
 };
+

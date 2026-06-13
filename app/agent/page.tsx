@@ -11,7 +11,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Sparkles, Loader2, Workflow, Settings, History, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Send, Sparkles, Loader2, Workflow, History, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -21,9 +21,10 @@ import { Avatar } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import type { ContentFlowEvent, WorkflowDefinition } from "@/types/contentflow";
+import type { WorkflowDefinition } from "@/types/contentflow";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { AgentSettingsButton } from "@/components/agent/AgentSettingsButton";
 
 // =============================================================================
 // Types
@@ -40,54 +41,6 @@ interface ChatMessage {
     output?: unknown;
     status: "running" | "done" | "error";
   }>;
-}
-
-// =============================================================================
-// Mock Workflow Generation (Phase 2 — real Cline SDK SSE in place)
-// =============================================================================
-
-function buildMockWorkflowResponse(niche: string, audience: string, tone: string, frequency: string): {
-  text: string;
-  workflow: WorkflowDefinition;
-} {
-  const name = `${niche} Content Pipeline`;
-  const description = `Automated content pipeline: scrapes trending ${niche} topics, generates ${tone} ${"linkedin"} posts with images, and publishes on a ${frequency} schedule.`;
-
-  const nodes = [
-    { id: "trend-scraper", type: "SCRAPE_TRENDS", position: { x: 100, y: 100 }, data: { label: "Trending Scraper", Niche: niche, Sources: "google_trends,reddit", "Max Results": "10" } },
-    { id: "content-writer", type: "AI_TEXT_GEN", position: { x: 450, y: 100 }, data: { label: "AI Content Writer", "System Message": `You are a ${tone} social media content writer.`, Model: "gpt-4o", Temperature: "0.7", Platform: "linkedin" } },
-    { id: "image-gen", type: "AI_IMAGE_GEN", position: { x: 800, y: 100 }, data: { label: "AI Image Generator", Style: "minimalist", Width: "1200", Height: "630" } },
-    { id: "hashtag-gen", type: "HASHTAG_GEN", position: { x: 1150, y: 100 }, data: { label: "Hashtag Generator" } },
-    { id: "linkedin-pub", type: "LINKEDIN_PUBLISH", position: { x: 1500, y: 100 }, data: { label: "LinkedIn Publisher" } },
-  ];
-
-  const edges = [
-    { id: "e1", source: "trend-scraper", target: "content-writer" },
-    { id: "e2", source: "content-writer", target: "image-gen" },
-    { id: "e3", source: "image-gen", target: "hashtag-gen" },
-    { id: "e4", source: "hashtag-gen", target: "linkedin-pub" },
-  ];
-
-  const scheduleMap: Record<string, string> = {
-    daily: "0 9 * * *",
-    weekdays: "0 9 * * 1-5",
-    "twice a week": "0 9 * * 1,4",
-    weekly: "0 9 * * 1",
-  };
-
-  return {
-    text: `Here's the workflow I've designed:\n\n**${name}**\n\n${description}\n\n**Schedule:** ${frequency} at 9:00 AM\n**Estimated credits per run:** 14 credits\n\nYou can open it in the Workflow Editor to customize each step.`,
-    workflow: {
-      id: crypto.randomUUID(),
-      name,
-      description,
-      nodes,
-      edges,
-      createdAt: new Date().toISOString(),
-      schedule: scheduleMap[frequency] ?? "0 9 * * *",
-      estimatedCredits: 14,
-    },
-  };
 }
 
 // =============================================================================
@@ -120,27 +73,6 @@ export default function AgentChatPage() {
     inputRef.current?.focus();
   }, []);
 
-  function extractContextFromHistory(): { niche: string; audience: string; tone: string; frequency: string } {
-    const userMessages = messages.filter((m) => m.role === "user").map((m) => m.content);
-    const combined = userMessages.join(" ").toLowerCase();
-
-    const nicheMap: Record<string, string> = {
-      "ai/ml": "AI/ML Engineering",
-      "ai": "AI/ML Engineering",
-      "data science": "Data Science",
-      "web dev": "Web Development",
-      cybersecurity: "Cybersecurity",
-      "cloud": "Cloud Computing",
-    };
-    const niche = Object.entries(nicheMap).find(([k]) => combined.includes(k))?.[1] ?? "Data Science";
-
-    const audience = combined.includes("beginner") ? "beginners" : combined.includes("c-level") ? "C-level executives" : "professionals";
-    const tone = combined.includes("casual") ? "conversational" : combined.includes("educational") ? "educational" : "professional";
-    const frequency = combined.includes("weekly") ? "weekly" : combined.includes("weekdays") ? "weekdays" : "daily";
-
-    return { niche, audience, tone, frequency };
-  }
-
   async function handleSend() {
     if (!input.trim() || isStreaming) return;
 
@@ -154,74 +86,122 @@ export default function AgentChatPage() {
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsStreaming(true);
-    const nextTurn = turn + 1;
-    setTurn(nextTurn);
+    setTurn((prev) => prev + 1);
 
-    if (nextTurn <= 1) {
-      // First message → clarifying questions
-      const clarifyingText =
-        "Great idea! Let me help you build that content pipeline.\n\nI have a few clarifying questions first:\n\n1. **What niche or industry** should the content focus on? (e.g., AI/ML, data science, web development)\n2. **Who is your target audience?** (beginners, experienced professionals, C-level)\n3. **What tone** should the content have? (professional, educational, inspirational)\n4. **How frequently** should content go out? (daily, weekdays, weekly)";
+    const rawSettings = typeof window !== "undefined"
+      ? localStorage.getItem("contentflow-agent-settings")
+      : null;
+    const settings = rawSettings ? JSON.parse(rawSettings) : {};
 
-      const assistantMessage: ChatMessage = {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content: "",
-        timestamp: Date.now(),
-      };
+    const assistantId = crypto.randomUUID();
+    const assistantMessage: ChatMessage = {
+      id: assistantId,
+      role: "assistant",
+      content: "",
+      timestamp: Date.now(),
+      toolCalls: [],
+    };
+    setMessages((prev) => [...prev, assistantMessage]);
 
-      setMessages((prev) => [...prev, assistantMessage]);
-      await streamText(assistantMessage.id, clarifyingText);
-    } else {
-      // Second+ message → simulate tool calls then workflow generation
-      const ctx = extractContextFromHistory();
+    try {
+      const response = await fetch("/api/agent/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: userMessage.content,
+          history: messages,
+          providerId: settings.providerId,
+          modelId: settings.modelId,
+        }),
+      });
 
-      // Simulate tool calls
-      const toolNames = ["scrape_trending_topics", "generate_content", "create_workflow"];
-      for (const name of toolNames) {
-        setActiveToolCalls((prev) => [...prev, { name, status: "running" }]);
-        await new Promise((r) => setTimeout(r, 600 + Math.random() * 400));
-        setActiveToolCalls((prev) =>
-          prev.map((tc) => (tc.name === name ? { ...tc, status: "done" as const } : tc))
-        );
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
       }
-      await new Promise((r) => setTimeout(r, 300));
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("No response body");
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let fullText = "";
+      const toolCalls: ChatMessage["toolCalls"] = [];
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const events = buffer.split("\n\n");
+        buffer = events.pop() || "";
+
+        for (const eventBlock of events) {
+          if (!eventBlock.trim()) continue;
+
+          const lines = eventBlock.split("\n");
+          let dataStr = "";
+          for (const line of lines) {
+            if (line.startsWith("data: ")) {
+              dataStr = line.slice(6);
+              break;
+            }
+          }
+          if (!dataStr) continue;
+
+          try {
+            const data = JSON.parse(dataStr);
+
+            if (data.type === "text" && data.content) {
+              fullText += data.content;
+              setMessages((prev) =>
+                prev.map((msg) =>
+                  msg.id === assistantId
+                    ? { ...msg, content: fullText }
+                    : msg
+                )
+              );
+            } else if (data.type === "tool_call") {
+              setActiveToolCalls((prev) => [...prev, { name: data.name, status: "running" }]);
+              toolCalls.push({ name: data.name, input: data.input || {}, status: "running" });
+            } else if (data.type === "tool_result") {
+              setActiveToolCalls((prev) =>
+                prev.map((tc) => (tc.name === data.name ? { ...tc, status: "done" } : tc))
+              );
+              const idx = toolCalls.findIndex(
+                (tc) => tc.name === data.name && tc.status === "running"
+              );
+              if (idx >= 0) {
+                toolCalls[idx] = { ...toolCalls[idx], output: data.output, status: "done" };
+              }
+            }
+          } catch {
+            // Skip unparseable lines
+          }
+        }
+      }
+
       setActiveToolCalls([]);
-
-      const { text, workflow: wf } = buildMockWorkflowResponse(ctx.niche, ctx.audience, ctx.tone, ctx.frequency);
-
-      const assistantMessage: ChatMessage = {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content: "",
-        timestamp: Date.now(),
-        toolCalls: toolNames.map((name) => ({
-          name,
-          input: {},
-          output: {},
-          status: "done" as const,
-        })),
-      };
-
-      setMessages((prev) => [...prev, assistantMessage]);
-      await streamText(assistantMessage.id, text);
-
-      setWorkflow(wf);
-    }
-
-    setIsStreaming(false);
-  }
-
-  async function streamText(messageId: string, text: string) {
-    const words = text.split(" ");
-    for (let i = 0; i < words.length; i++) {
-      await new Promise((r) => setTimeout(r, 12 + Math.random() * 20));
       setMessages((prev) =>
         prev.map((msg) =>
-          msg.id === messageId
-            ? { ...msg, content: msg.content + (i > 0 ? " " : "") + words[i] }
+          msg.id === assistantId
+            ? { ...msg, toolCalls: toolCalls.length > 0 ? toolCalls : undefined }
             : msg
         )
       );
+    } catch (error) {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantId
+            ? {
+                ...msg,
+                content: `Error: ${error instanceof Error ? error.message : "Failed to connect to agent"}`,
+              }
+            : msg
+        )
+      );
+      setActiveToolCalls([]);
+    } finally {
+      setIsStreaming(false);
     }
   }
 
@@ -263,10 +243,7 @@ export default function AgentChatPage() {
           )}
         </ScrollArea>
         <div className="p-3 border-t">
-          <Button variant="outline" size="sm" className="w-full text-xs" disabled>
-            <Settings className="h-3 w-3 mr-1" />
-            Agent Settings
-          </Button>
+          <AgentSettingsButton />
         </div>
       </aside>
 

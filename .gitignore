@@ -36,3 +36,8 @@ notes.md
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo

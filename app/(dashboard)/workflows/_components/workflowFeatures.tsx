@@ -83,7 +83,7 @@ export default function WorkflowFeatures() {
   <ul className="grid grid-cols-2 gap-4 w-[440px] flex-shrink-0">
     {items.map((item, index) => {
       return (
-        <GridItem title={item.title} value={item.value} icon={item.icon}/>
+        <GridItem key={index} title={item.title} value={item.value} icon={item.icon}/>
       );
     })}
   </ul>

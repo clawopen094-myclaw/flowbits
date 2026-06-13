@@ -78,6 +78,12 @@
     "vaul": "^1.1.2",
     "zod": "^3.24.2"
   },
+  "optionalDependencies": {
+    "@cline/core": "0.0.47",
+    "@cline/agents": "0.0.47",
+    "@cline/shared": "0.0.47",
+    "@cline/llms": "0.0.47"
+  },
   "devDependencies": {
     "@tanstack/react-query-devtools": "^5.66.0",
     "@types/node": "^20",

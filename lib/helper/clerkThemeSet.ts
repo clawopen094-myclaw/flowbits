@@ -2,6 +2,7 @@
 
 import { useTheme } from "next-themes";
 
-const { theme } = useTheme();
-
-export const curTheme = theme === "dark" ? true : false;
+export function useClerkTheme(): boolean {
+  const { theme } = useTheme();
+  return theme === "dark";
+}

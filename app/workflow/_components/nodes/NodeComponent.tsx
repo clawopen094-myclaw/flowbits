@@ -36,7 +36,7 @@ const NodeComponents  = memo((props:NodeProps)=> {
         <Separator/>
         <div className='flex flex-col'>
             {task.tools?.map((tool, index) => (
-                <NodeTools index={index} tools={tool}/>
+                <NodeTools key={index} index={index} tools={tool}/>
             ))}
         </div>
         </>

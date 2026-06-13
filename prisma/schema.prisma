@@ -30,7 +30,6 @@ model Workflow {
   lastRunStatus String?
   
   executions    WorkflowExecution[]
-  conversation  AgentConversation?
 
   @@unique([name, userId])
 }
@@ -145,12 +144,10 @@ model McpConnection {
 model AgentConversation {
   id         String    @id @default(cuid())
   userId     String
-  workflowId String?   // resulting workflow (null if conversation didn't yield one)
-  messages   String    // JSON: [{role, content, timestamp, toolCalls?}, ...]
+  workflowId String?   // nullable — conversation may not yield a workflow
+  messages   String    // JSON
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
-  
-  workflow   Workflow? @relation(fields: [workflowId], references: [id])
 }
 
 model ContentCalendar {

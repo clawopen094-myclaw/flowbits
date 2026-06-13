@@ -4,6 +4,7 @@ import { ExecutionPhaseStatus, WorkflowExecutionStatus } from "@/status/Workflow
 import { period } from "@/types/analytics";
 import { auth } from "@clerk/nextjs/server";
 import { eachDayOfInterval, format } from "date-fns";
+import { executionPhase } from "@prisma/client";
 
 type Stats = Record<string,{success:number,failed:number}>
 
@@ -17,7 +18,7 @@ export async function getCreditsUsageInPeriod(period:period){
 
     const dateRange = PeriodToDateRange(period)
     const dateFormat = "yyyy-MM-dd"
-    const executionPhases = await prisma.executionPhase.findMany({
+    const executionPhases: executionPhase[] = await prisma.executionPhase.findMany({
         where:{
             userId,
             startedAt:{
@@ -36,10 +37,9 @@ export async function getCreditsUsageInPeriod(period:period){
             failed: 0
         };
         return acc;
-    }, {} as any)
+    }, {} as Record<string, {success: number, failed: number}>)
 
-
-    executionPhases.forEach((phase)=>{
+    executionPhases.forEach((phase) => {
         const date = format(phase.startedAt!,dateFormat)
         if (phase.status === COMPLETED){
             stats[date].success += phase.creditsCost || 0

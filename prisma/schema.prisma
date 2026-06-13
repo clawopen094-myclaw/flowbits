@@ -1,5 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// ContentFlow Prisma Schema
+// PostgreSQL for production, compatible with SQLite for development
 
 generator client {
   provider = "prisma-client-js"
@@ -10,95 +10,158 @@ datasource db {
   url      = "file:./dev.db"
 }
 
+// === Existing Flowbits Models (keep) ===
+
 model Workflow {
-  id          String   @id @default(cuid())
-  userId      String
-  name        String
-  description String?
-  defination  String
-  executionPlan String?
-  creditsCost Int @default(0)
-
-  cron        String?
-
-  status      String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  nextRunAt   DateTime?
-
-  lastRunAt   DateTime?
-  lastRunId   String?
-  lastRunStatus String? 
-
-  executions WorkflowExecution[]
+  id            String              @id @default(cuid())
+  userId        String
+  name          String
+  description   String?
+  defination    String              // JSON workflow definition
+  executionPlan String?             // JSON execution plan
+  creditsCost   Int                 @default(0)
+  cron          String?
+  status        String              // DRAFT | PUBLISHED
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  nextRunAt     DateTime?
+  lastRunAt     DateTime?
+  lastRunId     String?
+  lastRunStatus String?
+  
+  executions    WorkflowExecution[]
+  conversation  AgentConversation?
 
   @@unique([name, userId])
 }
 
-
 model SystemVariables {
-  id          String   @id @default(cuid())
-  userId      String
-  name        String   
-  value       String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  userId    String
+  name      String   
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@unique([name,value,userId])
+  @@unique([name, value, userId])
 }
-
-
 
 model WorkflowExecution {
-  id          String   @id @default(cuid())
-  workflowId  String
-  userId      String
-  trigger     String
-  definition  String?
-  status      String
-  createdAt   DateTime @default(now())
-  startedAt   DateTime?
-  completedAt   DateTime?
-
-  creditsConsumed Int @default(0)
-
-  phases executionPhase[]
-
-  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  id              String           @id @default(cuid())
+  workflowId      String
+  userId          String
+  trigger         String           // MANUAL | CRON
+  definition      String?          // JSON snapshot
+  status          String           // PENDING | RUNNING | COMPLETED | FAILED
+  createdAt       DateTime         @default(now())
+  startedAt       DateTime?
+  completedAt     DateTime?
+  creditsConsumed Int              @default(0)
+  
+  phases          executionPhase[]
+  workflow        Workflow         @relation(fields: [workflowId], references: [id], onDelete: Cascade)
 }
 
-
 model executionPhase {
-  id          String   @id @default(cuid())
-  userId      String
-  status      String
-  number      Int
-  node        String
-  name        String
-  startedAt   DateTime?
-  completedAt DateTime?
-  inputs      String?
-  outputs     String?
-
-  creditsCost Int?
-  workflowexecutionId String
-  logs  ExecutionLogs[]
-
-  execution WorkflowExecution @relation(fields: [workflowexecutionId], references: [id], onDelete: Cascade)
+  id                   String          @id @default(cuid())
+  userId               String
+  status               String          // CREATED | PENDING | RUNNING | COMPLETED | FAILED
+  number               Int
+  node                 String          // JSON node data
+  name                 String
+  startedAt            DateTime?
+  completedAt          DateTime?
+  inputs               String?         // JSON
+  outputs              String?         // JSON
+  creditsCost          Int?
+  workflowexecutionId  String
+  
+  logs                 ExecutionLogs[]
+  execution            WorkflowExecution @relation(fields: [workflowexecutionId], references: [id], onDelete: Cascade)
 }
 
 model ExecutionLogs {
-  id          String   @id @default(cuid())
-  logLevel    String
-  message     String
-  timestamp   DateTime @default(now())
-
+  id               String         @id @default(cuid())
+  logLevel         String         // info | warn | error | debug
+  message          String
+  timestamp        DateTime       @default(now())
   executionPhaseId String
   
-  executionPhase executionPhase @relation(fields: [executionPhaseId], references: [id], onDelete: Cascade)
+  executionPhase   executionPhase @relation(fields: [executionPhaseId], references: [id], onDelete: Cascade)
 }
 
 model UserBalance {
-  userId String @id
-  credits Int @default(0)
+  userId  String @id
+  credits Int    @default(0)
+}
+
+// === NEW ContentFlow Models ===
+
+model SocialAccount {
+  id             String   @id @default(cuid())
+  userId         String
+  platform       String   // instagram | youtube | twitter | linkedin | facebook | tiktok
+  platformUserId String
+  accessToken    String   // encrypted at rest
+  refreshToken   String?  // encrypted at rest
+  tokenExpires   DateTime?
+  username       String
+  avatarUrl      String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([userId, platform, platformUserId])
+}
+
+model Asset {
+  id           String   @id @default(cuid())
+  userId       String
+  workflowId   String?
+  type         String   // image | video | audio | document
+  mimeType     String
+  url          String   // S3 URL
+  thumbnailUrl String?
+  metadata     String?  // JSON: width, height, duration, prompt, model, seed
+  size         Int      // bytes
+  createdAt    DateTime @default(now())
+}
+
+model McpConnection {
+  id         String   @id @default(cuid())
+  userId     String
+  name       String
+  serverType String   // higgesfield | magnific | stability | runway | elevenlabs | linkedin | custom
+  command    String   // e.g., "npx -y @contentflow/instagram-mcp-server"
+  args       String?  // JSON array of CLI args
+  envVars    String?  // JSON object of env vars
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, name])
+}
+
+model AgentConversation {
+  id         String    @id @default(cuid())
+  userId     String
+  workflowId String?   // resulting workflow (null if conversation didn't yield one)
+  messages   String    // JSON: [{role, content, timestamp, toolCalls?}, ...]
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  
+  workflow   Workflow? @relation(fields: [workflowId], references: [id])
+}
+
+model ContentCalendar {
+  id          String   @id @default(cuid())
+  userId      String
+  workflowId  String
+  platform    String   // instagram | youtube | twitter | linkedin | facebook
+  scheduledAt DateTime
+  status      String   // scheduled | published | failed
+  assetId     String?
+  postUrl     String?
+  engagement  String?  // JSON: likes, shares, comments
+  createdAt   DateTime @default(now())
 }

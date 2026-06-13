@@ -1,6 +1,6 @@
 "use client";
 
-import { HomeIcon, ReceiptText, Workflow, KeyRound, Bot } from 'lucide-react'
+import { HomeIcon, ReceiptText, Workflow, KeyRound, Sparkles } from 'lucide-react'
 import React from "react";
 import { FloatingDock } from "@/components/ui/floating-dock";
 
@@ -14,18 +14,18 @@ export function FloatingDockDemo() {
       href: "/",
     },
     {
+      title: "Agent Chat",
+      icon: (
+        <Sparkles className="h-full w-full text-neutral-500 dark:text-neutral-300" />
+      ),
+      href: "/agent",
+    },
+    {
       title: "Workflows",
       icon: (
         <Workflow className="h-full w-full text-neutral-500 dark:text-neutral-300" />
       ),
       href: "/workflows",
-    },
-    {
-      title: "Agents",
-      icon: (
-        <Bot className="h-full w-full text-neutral-500 dark:text-neutral-300" />
-      ),
-      href: "/agents",
     },
     {
       title: "Credentials",

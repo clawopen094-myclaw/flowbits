@@ -6,8 +6,7 @@ Build Flowbits incrementally using a spec-driven workflow. Context files define
 what to build, how to build it, and the current state of progress. Always implement
 against these specs — do not infer or invent behavior from scratch.
 
-The project has a dual-language architecture: TypeScript/Next.js for the web app
-and Python/FastAPI for heavy execution. Respect this boundary — do not mix concerns.
+The project architecture: TypeScript/Next.js for the web app, Cline AgentRuntime for agent orchestration, and standalone Python MCP servers for platform connectors. Respect this boundary — do not mix concerns.
 
 ## Scoping Rules
 

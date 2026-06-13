@@ -8,7 +8,8 @@
 | UI           | Tailwind CSS 3 + Radix UI + shadcn/ui patterns  | Styling and component primitives  |
 | Auth         | Clerk (@clerk/nextjs v6)                        | Authentication and user management |
 | Database     | Prisma ORM v6 + SQLite (dev.db)                 | Data persistence                  |
-| API (Python) | FastAPI (uvicorn) + pydantic-ai                 | Heavy AI/browser execution        |
+| Agent        | Cline AgentRuntime + SSE streaming              | AI orchestration + tool calling   |
+| MCP Connectors | Python FastMCP servers (4 platforms)           | Social media content publishing   |
 | Workflow UI  | @xyflow/react v12 (React Flow)                  | Node-based visual editor          |
 | Scheduling   | Cron-based (cron-parser + Vercel Cron trigger)  | Automated workflow execution      |
 | Animations   | Framer Motion + motion v12                      | UI animations                     |
@@ -21,12 +22,12 @@
   - `app/workflow/` — Visual flow editor and execution viewer
   - `app/api/` — Next.js API routes (workflow execute, cron trigger)
 - `lib/` — Core logic: workflow engine, executors, task definitions, execution plan
-  - `lib/workflow/executor/` — TypeScript executors that call FastAPI
+  - `lib/cline/` — Cline AgentRuntime bridge, tool registry, SSE streaming
+  - `lib/workflow/executor/` — TypeScript executors that call Cline tools
   - `lib/workflow/task/` — Node type definitions (inputs, outputs, params)
-- `api/` — Python FastAPI backend for heavy execution
-  - `api/nodes/` — Per-node execution functions (OpenAI, Gemini, LaunchBrowser)
-  - `api/utils/agents/` — AgentCreator: pydantic-ai agent factory
-  - `api/utils/tools/` — Agent tools (roll_die, get_player_name)
+- `api/` — Standalone Python MCP servers + workflow generator
+  - `api/mcp/` — FastMCP platform connectors (LinkedIn, Instagram, YouTube, Twitter)
+  - `api/agent/` — pydantic-ai workflow generator (NL → structured definition)
 - `actions/` — Next.js Server Actions (workflows, analytics, billing, credentials)
 - `components/` — Shared React components (ui/, providers/, magicui/)
 - `hooks/` — Custom React hooks (execution plan, flow validation)
@@ -72,8 +73,8 @@ runWorkflow() → CREATE WorkflowExecution + phases → ExecuteWorkflow()
    with no parallelism within a single execution
 2. Every execution checks credit balance BEFORE running — if insufficient,
    the entire execution fails before any phase runs
-3. TypeScript executors are thin proxies — they extract inputs, call FastAPI
-   via axios, and set outputs; no business logic lives in executors
+3. TypeScript executors are thin proxies — they extract inputs, call Cline tools
+   via the tool registry, and set outputs; no business logic lives in executors
 4. Node-to-node data flow is strictly via edge connections — a node's output
    can only reach another node if an edge connects them (sourceHandle → targetHandle)
 5. Published workflows have a frozen execution plan — the plan is generated at

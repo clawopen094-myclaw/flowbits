@@ -61,7 +61,7 @@
 
 - `app/` — Next.js App Router pages and API routes
 - `lib/` — Core business logic, workflow engine, executors
-- `api/` — Python FastAPI backend (separate process)
+- `api/` — Standalone Python MCP servers and workflow generator
 - `actions/` — Next.js Server Actions (one file per action group)
 - `components/` — Shared React components
   - `components/ui/` — shadcn/ui generated components (do not manually edit)

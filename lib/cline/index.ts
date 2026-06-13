@@ -10,12 +10,9 @@
  * We cast internally to avoid friction with Cline's strict generics.
  */
 
-import { 
-  type AgentTool,
-  type AgentRuntimeConfigWithProvider,
-} from "@cline/agents";
-
-import { AgentRuntime } from "@cline/agents";
+import { type AgentTool, type AgentToolContext } from "@cline/shared";
+import { AgentRuntime, type AgentRuntimeEvent, type AgentRuntimeConfigWithProvider } from "@cline/agents";
+import type { AgentConfig } from "@cline/shared";
 
 // =============================================================================
 // ContentFlow Tool Definitions
@@ -45,7 +42,7 @@ export const scrapeTrendingTool = {
     },
     required: ["niche"]
   },
-  execute: async (input: unknown) => {
+  execute: async (input: unknown, _context: AgentToolContext) => {
     const data = input as Record<string, unknown>;
     const niche = (data.niche as string) || "general";
     const maxResults = (data.maxResults as number) || 10;
@@ -96,7 +93,7 @@ export const generateContentTool = {
     },
     required: ["topic", "platform"]
   },
-  execute: async (input: unknown) => {
+  execute: async (input: unknown, _context: AgentToolContext) => {
     const data = input as Record<string, unknown>;
     const topic = (data.topic as string) || "general";
     const platform = (data.platform as string) || "linkedin";
@@ -148,7 +145,7 @@ export const generateImageTool = {
     },
     required: ["prompt"]
   },
-  execute: async (input: unknown) => {
+  execute: async (input: unknown, _context: AgentToolContext) => {
     const data = input as Record<string, unknown>;
     const prompt = (data.prompt as string) || "ContentFlow";
     const width = (data.width as number) || 1200;
@@ -192,7 +189,7 @@ export const postToLinkedInTool = {
     },
     required: ["content"]
   },
-  execute: async (input: unknown) => {
+  execute: async (input: unknown, _context: AgentToolContext) => {
     const data = input as Record<string, unknown>;
     const content = (data.content as string) || "";
     return {
@@ -220,6 +217,8 @@ export const CONTENT_TOOLS: AgentTool[] = [
 // Agent Runtime Configuration
 // =============================================================================
 
+export type { AgentConfig };
+
 export interface ContentFlowAgentConfig {
   providerId: string;
   modelId: string;
@@ -229,10 +228,9 @@ export interface ContentFlowAgentConfig {
 
 export function createContentFlowConfig(
   config: ContentFlowAgentConfig
-): AgentRuntimeConfigWithProvider {
+): AgentConfig {
   return {
-    agentId: "contentflow-agent",
-    agentRole: "Content Workflow Builder",
+    sessionId: "contentflow-session",
     providerId: config.providerId,
     modelId: config.modelId,
     apiKey: config.apiKey,
@@ -254,7 +252,59 @@ Available tools:
 - generate_content: Create social media posts
 - generate_image: Create images for content
 - post_linkedin: Post to LinkedIn`,
-    toolExecution: "sequential",
+  };
+}
+
+// =============================================================================
+// Streaming Bridge — AgentRuntime events → callback
+// =============================================================================
+
+export type StreamEvent =
+  | { type: "text"; content: string }
+  | { type: "tool_call"; name: string; input: unknown }
+  | { type: "tool_result"; name: string; output: unknown }
+  | { type: "done"; outputText: string }
+  | { type: "status"; message: string };
+
+export function streamAgentChat(
+  config: AgentConfig,
+  userMessage: string,
+  onEvent: (event: StreamEvent) => void
+): { abort: () => void } {
+  const runtime = new AgentRuntime(config as AgentRuntimeConfigWithProvider);
+
+  runtime.subscribe((event: AgentRuntimeEvent) => {
+    switch (event.type) {
+      case "assistant-text-delta":
+        onEvent({ type: "text", content: event.text });
+        break;
+      case "tool-started":
+        onEvent({
+          type: "tool_call",
+          name: event.toolCall.toolName,
+          input: event.toolCall.input,
+        });
+        break;
+      case "tool-finished":
+        onEvent({
+          type: "tool_result",
+          name: event.toolCall.toolName,
+          output: event.message.content,
+        });
+        break;
+      case "run-finished":
+        onEvent({ type: "done", outputText: event.result.outputText });
+        break;
+      case "status-notice":
+        onEvent({ type: "status", message: event.message });
+        break;
+    }
+  });
+
+  runtime.run(userMessage);
+
+  return {
+    abort: () => runtime.abort(),
   };
 }
 
@@ -266,7 +316,7 @@ let _runtime: AgentRuntime | null = null;
 
 export function getAgentRuntime(config?: ContentFlowAgentConfig): AgentRuntime | null {
   if (!_runtime && config) {
-    _runtime = new AgentRuntime(createContentFlowConfig(config));
+    _runtime = new AgentRuntime(createContentFlowConfig(config) as AgentRuntimeConfigWithProvider);
   }
   return _runtime;
 }

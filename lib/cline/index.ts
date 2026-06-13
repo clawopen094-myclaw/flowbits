@@ -4,50 +4,51 @@
  * Initializes the Cline AgentRuntime with ContentFlow-specific tools
  * for the content creation pipeline. This is the bridge between
  * natural language chat and workflow generation.
+ *
+ * Cline SDK v0.0.47 — AgentTool.execute uses generics:
+ *   AgentTool<TInput, TOutput> with execute(input: TInput, context: AgentToolContext)
+ * We cast internally to avoid friction with Cline's strict generics.
  */
 
 import { 
   type AgentTool,
   type AgentRuntimeConfigWithProvider,
-  type AgentMessage,
-  type AgentRuntimeEvent,
-} from "@cline/shared";
+} from "@cline/agents";
+
 import { AgentRuntime } from "@cline/agents";
 
 // =============================================================================
 // ContentFlow Tool Definitions
 // =============================================================================
 
-export const scrapeTrendingTool: AgentTool = {
+export const scrapeTrendingTool = {
   name: "scrape_trending_topics",
   description: 
     "Scrape trending topics and content ideas from various sources. " +
     "Provide a niche or topic and get trending content ideas with engagement metrics.",
   inputSchema: {
-    type: "object",
+    type: "object" as const,
     properties: {
       niche: { 
-        type: "string", 
-        description: "The niche or topic to find trending content for (e.g., 'data science', 'AI engineering', 'MLOps')" 
+        type: "string" as const,
+        description: "The niche or topic to find trending content for"
       },
       sources: {
-        type: "array",
-        items: { type: "string", enum: ["google_trends", "reddit", "twitter", "linkedin", "youtube"] },
-        description: "Sources to scrape trends from",
-        default: ["google_trends", "reddit"]
+        type: "array" as const,
+        items: { type: "string" as const },
+        description: "Sources to scrape trends from"
       },
       maxResults: {
-        type: "number",
-        description: "Maximum number of trending topics to return",
-        default: 10
+        type: "number" as const,
+        description: "Maximum number of trending topics to return"
       }
     },
     required: ["niche"]
   },
-  handler: async (input) => {
-    // Phase 1: Stub — returns mock trending data
-    // Phase 2: Connects to Google Trends API + crawl4ai for real data
-    const { niche, maxResults = 10 } = input;
+  execute: async (input: unknown) => {
+    const data = input as Record<string, unknown>;
+    const niche = (data.niche as string) || "general";
+    const maxResults = (data.maxResults as number) || 10;
     return {
       niche,
       trends: [
@@ -60,53 +61,51 @@ export const scrapeTrendingTool: AgentTool = {
       timestamp: new Date().toISOString(),
     };
   }
-};
+} as AgentTool;
 
-export const generateContentTool: AgentTool = {
+export const generateContentTool = {
   name: "generate_content",
   description:
     "Generate content text using AI models. Create posts, captions, threads, " +
     "or articles on a given topic. Specify the platform to format appropriately.",
   inputSchema: {
-    type: "object",
+    type: "object" as const,
     properties: {
       topic: {
-        type: "string",
+        type: "string" as const,
         description: "The topic or prompt to generate content about"
       },
       platform: {
-        type: "string",
+        type: "string" as const,
         enum: ["linkedin", "twitter", "instagram", "facebook", "youtube"],
         description: "Target platform for content formatting"
       },
       tone: {
-        type: "string",
+        type: "string" as const,
         enum: ["professional", "casual", "inspirational", "educational", "humorous"],
-        description: "Tone of the content",
-        default: "professional"
+        description: "Tone of the content"
       },
       maxLength: {
-        type: "number",
-        description: "Maximum character count",
-        default: 3000
+        type: "number" as const,
+        description: "Maximum character count"
       },
       includeHashtags: {
-        type: "boolean",
-        description: "Whether to include relevant hashtags",
-        default: true
+        type: "boolean" as const,
+        description: "Whether to include relevant hashtags"
       }
     },
     required: ["topic", "platform"]
   },
-  handler: async (input) => {
-    // Phase 1: Stub — returns mock content
-    // Phase 2: Uses Cline's LLM provider to actually generate
-    const { topic, platform, tone = "professional" } = input;
+  execute: async (input: unknown) => {
+    const data = input as Record<string, unknown>;
+    const topic = (data.topic as string) || "general";
+    const platform = (data.platform as string) || "linkedin";
+    const tone = (data.tone as string) || "professional";
     return {
       content: `[${platform.toUpperCase()} POST - ${tone} tone]\n\n` +
         `🚀 ${topic}\n\n` +
         `Here's what you need to know about ${topic.toLowerCase()}...\n\n` +
-        `[Generated content placeholder — will be replaced with actual AI generation in Phase 2]\n\n` +
+        `[Generated content placeholder — Phase 2: Real AI generation]\n\n` +
         `#content #${platform} #${topic.replace(/\s+/g, '').toLowerCase()}`,
       platform,
       tone,
@@ -114,100 +113,100 @@ export const generateContentTool: AgentTool = {
       estimatedReadTime: "2 min",
     };
   }
-};
+} as AgentTool;
 
-export const generateImageTool: AgentTool = {
+export const generateImageTool = {
   name: "generate_image",
   description:
     "Generate an image for social media content. Specify style, dimensions, " +
     "and topic. Returns a URL to the generated image.",
   inputSchema: {
-    type: "object",
+    type: "object" as const,
     properties: {
       prompt: {
-        type: "string",
-        description: "Image generation prompt — be descriptive about what you want"
+        type: "string" as const,
+        description: "Image generation prompt"
       },
       style: {
-        type: "string",
+        type: "string" as const,
         enum: ["minimalist", "illustration", "photo", "data_viz", "abstract"],
-        description: "Visual style of the image",
-        default: "minimalist"
+        description: "Visual style of the image"
       },
       width: {
-        type: "number",
-        description: "Image width in pixels",
-        default: 1200
+        type: "number" as const,
+        description: "Image width in pixels"
       },
       height: {
-        type: "number",
-        description: "Image height in pixels",
-        default: 630
+        type: "number" as const,
+        description: "Image height in pixels"
       },
       platform: {
-        type: "string",
+        type: "string" as const,
         enum: ["linkedin", "twitter", "instagram", "facebook", "youtube"],
         description: "Platform (for aspect ratio suggestions)"
       }
     },
     required: ["prompt"]
   },
-  handler: async (input) => {
-    // Phase 1: Stub — generates a placeholder
-    // Phase 2: Calls DALL-E / Stable Diffusion / Flux API
+  execute: async (input: unknown) => {
+    const data = input as Record<string, unknown>;
+    const prompt = (data.prompt as string) || "ContentFlow";
+    const width = (data.width as number) || 1200;
+    const height = (data.height as number) || 630;
+    const style = (data.style as string) || "minimalist";
     return {
-      url: `https://placehold.co/${input.width || 1200}x${input.height || 630}/1a1a2e/7c3aed?text=${encodeURIComponent(input.prompt?.substring(0, 30) || 'ContentFlow')}`,
-      prompt: input.prompt,
-      style: input.style || "minimalist",
-      dimensions: `${input.width || 1200}x${input.height || 630}`,
-      generated: false, // Phase 1: placeholder. Phase 2: real generation
+      url: `https://placehold.co/${width}x${height}/1a1a2e/7c3aed?text=${encodeURIComponent(prompt.substring(0, 30))}`,
+      prompt,
+      style,
+      dimensions: `${width}x${height}`,
+      generated: false,
     };
   }
-};
+} as AgentTool;
 
-export const postToLinkedInTool: AgentTool = {
+export const postToLinkedInTool = {
   name: "post_linkedin",
   description:
     "Post content to LinkedIn. Can post text, text+image, or schedule for later. " +
     "Requires a connected LinkedIn account.",
   inputSchema: {
-    type: "object",
+    type: "object" as const,
     properties: {
       content: {
-        type: "string",
+        type: "string" as const,
         description: "The post text content"
       },
       imageUrl: {
-        type: "string",
-        description: "URL of an image to attach (optional)"
+        type: "string" as const,
+        description: "URL of an image to attach"
       },
       hashtags: {
-        type: "array",
-        items: { type: "string" },
+        type: "array" as const,
+        items: { type: "string" as const },
         description: "Hashtags to include"
       },
       scheduleAt: {
-        type: "string",
-        description: "ISO 8601 timestamp to schedule the post (omit for immediate)"
+        type: "string" as const,
+        description: "ISO 8601 timestamp to schedule the post"
       }
     },
     required: ["content"]
   },
-  handler: async (input) => {
-    // Phase 1: Stub — logs and returns
-    // Phase 2: Calls LinkedIn MCP server for actual publishing
+  execute: async (input: unknown) => {
+    const data = input as Record<string, unknown>;
+    const content = (data.content as string) || "";
     return {
       postId: `linkedin_post_${Date.now()}`,
-      status: input.scheduleAt ? "scheduled" : "posted",
-      scheduledAt: input.scheduleAt || new Date().toISOString(),
+      status: data.scheduleAt ? "scheduled" : "posted",
+      scheduledAt: data.scheduleAt || new Date().toISOString(),
       platform: "linkedin",
-      content: input.content?.substring(0, 100) + "...",
+      contentPreview: content.substring(0, 100) + "...",
     };
   }
-};
+} as AgentTool;
 
 // =============================================================================
-// Tool Registry — all content tools
+// Tool Registry
 // =============================================================================
 
 export const CONTENT_TOOLS: AgentTool[] = [
@@ -245,38 +244,16 @@ Your job is to help users create content pipelines. When a user describes
 what they want (e.g., "scrape trending AI topics and post to LinkedIn daily"),
 your process is:
 
-1. UNDERSTAND: Ask clarifying questions if needed (niche, tone, frequency, 
-   visual style, platforms, target audience)
-2. PLAN: Map out the workflow steps (sources → generation → publishing)
-3. BUILD: Use your tools to validate each step (scrape, generate, post)
+1. UNDERSTAND: Ask clarifying questions if needed
+2. PLAN: Map out the workflow steps
+3. BUILD: Use your tools to validate each step
 4. DELIVER: Output a complete WorkflowDefinition as JSON
 
 Available tools:
-- scrape_trending_topics: Find trending content ideas in a niche
-- generate_content: Create social media posts/threads/articles
-- generate_image: Create images for social media content
-- post_linkedin: Post content to LinkedIn (post or schedule)
-
-Output format for workflows:
-\`\`\`json
-{
-  "workflowName": "...",
-  "description": "...",
-  "nodes": [
-    { "id": "...", "type": "SCRAPE_TRENDS", "data": { "inputs": {...} } },
-    { "id": "...", "type": "AI_TEXT_GEN", "data": { "inputs": {...} } },
-    { "id": "...", "type": "AI_IMAGE_GEN", "data": { "inputs": {...} } },
-    { "id": "...", "type": "LINKEDIN_PUBLISH", "data": { "inputs": {...} } }
-  ],
-  "edges": [
-    { "source": "...", "target": "...", "sourceHandle": "Response", "targetHandle": "Input" }
-  ],
-  "schedule": "0 9 * * *"
-}
-\`\`\`
-
-Always validate that every node's required inputs are filled.
-Always connect edges so data flows from one step to the next.`,
+- scrape_trending_topics: Find trending content ideas
+- generate_content: Create social media posts
+- generate_image: Create images for content
+- post_linkedin: Post to LinkedIn`,
     toolExecution: "sequential",
   };
 }
@@ -289,92 +266,11 @@ let _runtime: AgentRuntime | null = null;
 
 export function getAgentRuntime(config?: ContentFlowAgentConfig): AgentRuntime | null {
   if (!_runtime && config) {
-    const runtimeConfig = createContentFlowConfig(config);
-    _runtime = new AgentRuntime(runtimeConfig);
+    _runtime = new AgentRuntime(createContentFlowConfig(config));
   }
   return _runtime;
 }
 
 export function resetAgentRuntime(): void {
   _runtime = null;
-}
-
-// =============================================================================
-// Chat Interface
-// =============================================================================
-
-export interface AgentChatMessage {
-  id: string;
-  role: "user" | "assistant" | "tool";
-  content: string;
-  timestamp: number;
-  toolCalls?: Array<{ name: string; input: unknown; output?: unknown }>;
-}
-
-export async function* streamAgentChat(
-  userMessage: string,
-  config: ContentFlowAgentConfig,
-  history: AgentChatMessage[] = []
-): AsyncGenerator<{
-  type: "text" | "tool_call" | "tool_result" | "done" | "error";
-  content?: string;
-  toolName?: string;
-  toolInput?: unknown;
-  toolOutput?: unknown;
-  messages?: AgentChatMessage[];
-  error?: string;
-}> {
-  const runtime = getAgentRuntime(config);
-  if (!runtime) {
-    yield { type: "error", error: "Agent runtime not initialized" };
-    return;
-  }
-
-  // Convert history to Cline message format
-  const clineMessages: AgentMessage[] = history.map(msg => ({
-    id: msg.id,
-    role: msg.role as AgentMessage["role"],
-    content: [{ type: "text" as const, text: msg.content }],
-    createdAt: msg.timestamp,
-  }));
-
-  try {
-    const run = runtime.run(userMessage, clineMessages);
-    
-    for await (const event of run) {
-      switch (event.type) {
-        case "content_update":
-          if (event.contentType === "text") {
-            yield { type: "text", content: event.text };
-          }
-          break;
-        case "content_start":
-          if (event.contentType === "tool") {
-            yield { 
-              type: "tool_call", 
-              toolName: event.toolName,
-              toolInput: event.input 
-            };
-          }
-          break;
-        case "content_end":
-          if (event.contentType === "tool") {
-            yield {
-              type: "tool_result",
-              toolName: event.toolName,
-              toolOutput: event.output,
-            };
-          }
-          break;
-        case "done":
-          yield { type: "done" };
-          break;
-        case "error":
-          yield { type: "error", error: event.error.message };
-          break;
-      }
-    }
-  } catch (err) {
-    yield { type: "error", error: err instanceof Error ? err.message : String(err) };
-  }
 }

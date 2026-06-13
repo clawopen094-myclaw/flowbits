@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useTheme } from "next-themes";
-import { motion as m } from "motion/react";
+import { motion as m, type Variants } from "motion/react";
 import { Button } from "@/components/ui/button";
 
 
@@ -11,7 +11,7 @@ export function ThemeToogle() {
   const { setTheme, theme, resolvedTheme } = useTheme();
 
 
-  const raysVariants = {
+  const raysVariants: Variants = {
     hidden: {
       strokeOpacity: 0,
       transition: {
@@ -27,7 +27,7 @@ export function ThemeToogle() {
     },
   };
 
-  const rayVariant = {
+  const rayVariant: Variants = {
     hidden: {
       pathLength: 0,
       opacity: 0,
@@ -40,7 +40,7 @@ export function ThemeToogle() {
       scale: 1,
       transition: {
         duration: 0.5,
-        ease: "easeOut",
+        ease: "easeOut" as any,
         // Customize timing for each property
         pathLength: { duration: 0.3 },
         opacity: { duration: 0.2 },
@@ -49,7 +49,7 @@ export function ThemeToogle() {
     },
   };
 
-  const shineVariant = {
+  const shineVariant: Variants = {
     hidden: {
       opacity: 0,
       scale: 2,
@@ -62,11 +62,9 @@ export function ThemeToogle() {
       strokeDashoffset: [0, -50, -100],
       filter: ["blur(2px)", "blur(2px)", "blur(0px)"],
       transition: {
-
-
         duration: 0.75,
-        ease: 'linear'
-      },
+        ease: 'linear' as const,
+      } as any,
     },
 
 

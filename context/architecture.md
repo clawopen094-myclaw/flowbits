@@ -25,9 +25,8 @@
   - `lib/cline/` — Cline AgentRuntime bridge, tool registry, SSE streaming
   - `lib/workflow/executor/` — TypeScript executors that call Cline tools
   - `lib/workflow/task/` — Node type definitions (inputs, outputs, params)
-- `api/` — Standalone Python MCP servers + workflow generator
+- `api/` — Standalone Python MCP servers
   - `api/mcp/` — FastMCP platform connectors (LinkedIn, Instagram, YouTube, Twitter)
-  - `api/agent/` — pydantic-ai workflow generator (NL → structured definition)
 - `actions/` — Next.js Server Actions (workflows, analytics, billing, credentials)
 - `components/` — Shared React components (ui/, providers/, magicui/)
 - `hooks/` — Custom React hooks (execution plan, flow validation)

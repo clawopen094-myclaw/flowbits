@@ -50,7 +50,6 @@ credits based on the node types used.
 - **SSE Streaming** — real-time agent chat via Server-Sent Events, streaming text + tool call display
 - **Tool Registry** — 4 content tools: scrape_trending_topics, generate_content, generate_image, schedule_post
 - **MCP Platform Connectors** — standalone FastMCP servers for LinkedIn, Instagram, YouTube, Twitter (auto-discoverable by Cline's MCP client)
-- **pydantic-ai Workflow Generator** — natural language → structured WorkflowDefinition pipeline
 
 ### Workflow Management
 - Dashboard with workflow list (data table with search, filter, pagination)

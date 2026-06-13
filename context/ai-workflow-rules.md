@@ -64,4 +64,4 @@ Update the relevant context file whenever implementation changes:
 3. `progress-tracker.md` reflects the completed work
 4. `npm run build` passes (Next.js)
 5. Prisma client is regenerated if schema changed (`npx prisma generate`)
-6. Python syntax is valid (`python3 -m py_compile api/index.py` and node files)
+6. Python syntax is valid for MCP servers (`python3 -m py_compile api/mcp/*.py`)

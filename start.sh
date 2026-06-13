@@ -1,28 +1,18 @@
 #!/bin/bash
 
-# Navigate to the project directory (optional)
+# ContentFlow — start the development server
 cd "$(dirname "$0")"
 
-# Check if crawl4ai is installed; if not, install it
-if ! command -v crawl4ai &> /dev/null; then
-    echo "📦 Installing crawl4ai..."
-    pip install -U crawl4ai
-    pip install crawl4ai --pre
-    crawl4ai-setup
+# Check if node_modules exist; if not, install
+if [ ! -d "node_modules" ]; then
+    echo "📦 Installing dependencies..."
+    npm install
 fi
 
-# Check if pnpm is installed
-if ! command -v pnpm &> /dev/null; then
-    echo "❌ pnpm is not installed. Please install it first."
-    exit 1
+# Copy .env.example if no .env exists
+if [ ! -f ".env" ]; then
+    echo "⚠️  No .env found. Copy .env.example and set your keys."
 fi
 
-# Run pnpm dev
-echo "🚀 Starting the development server..."
-pnpm dev
-
-# Optional: Add error handling
-if [ $? -ne 0 ]; then
-    echo "❌ Failed to start the development server."
-    exit 1
-fi
+echo "🚀 Starting ContentFlow dev server..."
+npm run dev

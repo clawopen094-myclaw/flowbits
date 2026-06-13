@@ -52,9 +52,9 @@ runWorkflow() → CREATE WorkflowExecution + phases → ExecuteWorkflow()
                     ↓
            For each phase → executeWorkflowPhase()
                     ↓
-        TypeScript Executor → axios POST → FastAPI /api/executephase
+        Cline AgentRuntime → callTool(toolName, input)
                     ↓
-              FastAPI → EXECUTOR_REGISTRY → Node function (Python)
+              Tool execute() → MCP server / external API
                     ↓
               Result flows back → setOutputs → next phase picks up input
 ```

@@ -45,11 +45,12 @@ credits based on the node types used.
 - Real-time flow validation (entrypoints, inputs, connections)
 - Execution plan generation from graph topology
 
-### AI Task Nodes
-- **Input** (0 credits) — save/forward text input; entrypoint
-- **Launch Browser** (5 credits) — crawl a URL via crawl4ai, return markdown; entrypoint
-- **OpenAI** (2 credits) — generate text via any OpenAI model (GPT-4o, o1, etc.); entrypoint
-- **Google Generative AI** (2 credits) — generate text via Gemini models; agent mode with tools; entrypoint
+### AI Agent Runtime
+- **Cline AgentRuntime** — unified agent harness with tool registry, LLM abstraction (OpenRouter), cron, session persistence
+- **SSE Streaming** — real-time agent chat via Server-Sent Events, streaming text + tool call display
+- **Tool Registry** — 4 content tools: scrape_trending_topics, generate_content, generate_image, schedule_post
+- **MCP Platform Connectors** — standalone FastMCP servers for LinkedIn, Instagram, YouTube, Twitter (auto-discoverable by Cline's MCP client)
+- **pydantic-ai Workflow Generator** — natural language → structured WorkflowDefinition pipeline
 
 ### Workflow Management
 - Dashboard with workflow list (data table with search, filter, pagination)
